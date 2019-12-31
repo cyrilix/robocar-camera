@@ -2,17 +2,22 @@ package camera
 
 import (
 	"bytes"
-	"github.com/cyrilix/robocar-base/testtools"
+	"github.com/cyrilix/robocar-protobuf/go/events"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/golang/protobuf/proto"
 	"gocv.io/x/gocv"
 	"image/jpeg"
-	"io"
 	"log"
+	"sync"
 	"testing"
 	"time"
 )
 
 type fakeVideoSource struct {
-	io.Closer
+}
+
+func (f fakeVideoSource) Close() error {
+	return nil
 }
 
 func (f fakeVideoSource) Read(dest *gocv.Mat) bool {
@@ -25,32 +30,50 @@ func (f fakeVideoSource) Read(dest *gocv.Mat) bool {
 	return true
 }
 
+
 func TestOpencvCameraPart(t *testing.T) {
-	p := testtools.NewFakePublisher()
+	var muPubEvents sync.Mutex
+	publishedEvents := make(map[string]*[]byte)
+	oldPublish := publish
+	defer func() {
+		publish = oldPublish}()
+	publish = func(_ mqtt.Client, topic string, payload *[]byte){
+		muPubEvents.Lock()
+		defer muPubEvents.Unlock()
+		publishedEvents[topic] = payload
+	}
+
 	const topic = "topic/test/camera"
 	imgBuffer := gocv.NewMat()
 
 	part := OpencvCameraPart{
+		client: nil,
 		vc:               fakeVideoSource{},
-		pub:              p,
 		topic:            topic,
 		publishFrequency: 1000,
 		imgBuffered:      &imgBuffer,
 	}
 
+
 	go part.Start()
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 
-	img := p.PublishedEvent(topic)
-	if img == nil {
-		t.Fatalf("event %s has not been published", topic)
-	}
-	content, err := img.ByteSliceValue()
+	var frameMsg events.FrameMessage
+	muPubEvents.Lock()
+	err := proto.Unmarshal(*(publishedEvents[topic]), &frameMsg)
 	if err != nil {
-		t.Errorf("unexpected error: %v", err)
+		t.Errorf("unable to unmarshal pubblished frame")
+	}
+	muPubEvents.Unlock()
+
+	if frameMsg.GetId().GetName() != "camera" {
+		t.Errorf("bad name frame: %v, wants %v", frameMsg.GetId().GetName(), "camera")
+	}
+	if frameMsg.GetId().GetId() != "XX" {
+		t.Errorf("bad name frame: %v, wants %v", frameMsg.GetId().GetId(), "XX")
 	}
 
-	_, err = jpeg.Decode(bytes.NewReader(content))
+	_, err = jpeg.Decode(bytes.NewReader(frameMsg.GetFrame()))
 	if err != nil {
 		t.Errorf("image published can't be decoded: %v", err)
 	}

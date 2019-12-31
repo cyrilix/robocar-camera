@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"github.com/cyrilix/robocar-base/cli"
-	"github.com/cyrilix/robocar-base/mqttdevice"
 	"github.com/cyrilix/robocar-camera/camera"
 	"gocv.io/x/gocv"
 	"log"
@@ -35,24 +34,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	pubSub := mqttdevice.NewPahoMqttPubSub(mqttBroker, username, password, clientId, mqttQos, mqttRetain)
-	defer func() {
-		err := pubSub.Close()
-		if err != nil {
-			log.Printf("unable to close mqtt publisher: %v", err)
-		}
-	}()
+	client, err := cli.Connect(mqttBroker, username, password, clientId)
+	if err != nil {
+		log.Fatalf("unable to connect to mqtt broker: %v", err)
+	}
+	defer client.Disconnect(10)
 
 	videoProperties := make(map[gocv.VideoCaptureProperties]float64)
 	videoProperties[gocv.VideoCaptureFrameWidth] = float64(videoWidth)
 	videoProperties[gocv.VideoCaptureFrameHeight] = float64(videoHeight)
 
-	c := camera.New(topicBase, pubSub, pubFrequency, videoProperties)
+	c := camera.New(client, topicBase, pubFrequency, videoProperties)
 	defer c.Stop()
 
 	cli.HandleExit(c)
 
-	err := c.Start()
+	err = c.Start()
 	if err != nil {
 		log.Fatalf("unable to start service: %v", err)
 	}
