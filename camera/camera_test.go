@@ -69,8 +69,12 @@ func TestOpencvCameraPart(t *testing.T) {
 	if frameMsg.GetId().GetName() != "camera" {
 		t.Errorf("bad name frame: %v, wants %v", frameMsg.GetId().GetName(), "camera")
 	}
-	if frameMsg.GetId().GetId() != "XX" {
-		t.Errorf("bad name frame: %v, wants %v", frameMsg.GetId().GetId(), "XX")
+	if len(frameMsg.GetId().GetId()) != 13 {
+		t.Errorf("bad id length: %v, wants %v", len(frameMsg.GetId().GetId()), 13)
+	}
+
+	if frameMsg.GetId().GetCreatedAt() == nil {
+		t.Errorf("missin CreatedAt field")
 	}
 
 	_, err = jpeg.Decode(bytes.NewReader(frameMsg.GetFrame()))

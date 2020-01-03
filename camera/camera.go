@@ -1,9 +1,11 @@
 package camera
 
 import (
+	"fmt"
 	"github.com/cyrilix/robocar-protobuf/go/events"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	log "github.com/sirupsen/logrus"
 	"gocv.io/x/gocv"
 	"io"
@@ -57,8 +59,8 @@ func (o *OpencvCameraPart) Start() error {
 	for {
 		select {
 
-		case <-ticker.C:
-			o.publishFrame()
+		case tickerTime := <-ticker.C:
+			o.publishFrame(tickerTime)
 		case <-o.cancel:
 			return nil
 		}
@@ -77,11 +79,12 @@ func (o *OpencvCameraPart) Stop() {
 	}
 }
 
-func (o *OpencvCameraPart) publishFrame() {
+func (o *OpencvCameraPart) publishFrame(tickerTime time.Time) {
 	o.muImgBuffered.Lock()
 	defer o.muImgBuffered.Unlock()
 
 	o.vc.Read(o.imgBuffered)
+
 	img, err := gocv.IMEncode(gocv.JPEGFileExt, *o.imgBuffered)
 	if err != nil {
 		log.Printf("unable to convert image to jpeg: %v", err)
@@ -91,7 +94,11 @@ func (o *OpencvCameraPart) publishFrame() {
 	msg := &events.FrameMessage{
 		Id: &events.FrameRef{
 			Name: "camera",
-			Id:   "XX",
+			Id:   fmt.Sprintf("%d%000d", tickerTime.Unix(), tickerTime.Nanosecond() / 1000 / 1000),
+			CreatedAt: &timestamp.Timestamp{
+				Seconds:              tickerTime.Unix(),
+				Nanos:                int32(tickerTime.Nanosecond()),
+			},
 		},
 		Frame: img,
 	}
@@ -105,5 +112,9 @@ func (o *OpencvCameraPart) publishFrame() {
 }
 
 var publish = func(client mqtt.Client, topic string, payload *[]byte) {
-	client.Publish(topic, 0, false, *payload)
+	token := client.Publish(topic, 0, false, *payload)
+	token.WaitTimeout(10 * time.Millisecond)
+	if err := token.Error(); err != nil {
+		log.Errorf("unable to publish frame: %v", err)
+	}
 }
