@@ -30,14 +30,14 @@ func (f fakeVideoSource) Read(dest *gocv.Mat) bool {
 	return true
 }
 
-
 func TestOpencvCameraPart(t *testing.T) {
 	var muPubEvents sync.Mutex
 	publishedEvents := make(map[string]*[]byte)
 	oldPublish := publish
 	defer func() {
-		publish = oldPublish}()
-	publish = func(_ mqtt.Client, topic string, payload *[]byte){
+		publish = oldPublish
+	}()
+	publish = func(_ mqtt.Client, topic string, payload *[]byte) {
 		muPubEvents.Lock()
 		defer muPubEvents.Unlock()
 		publishedEvents[topic] = payload
@@ -47,13 +47,12 @@ func TestOpencvCameraPart(t *testing.T) {
 	imgBuffer := gocv.NewMat()
 
 	part := OpencvCameraPart{
-		client: nil,
+		client:           nil,
 		vc:               fakeVideoSource{},
 		topic:            topic,
 		publishFrequency: 1000,
 		imgBuffered:      &imgBuffer,
 	}
-
 
 	go part.Start()
 	time.Sleep(5 * time.Millisecond)
