@@ -94,7 +94,7 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time) {
 	msg := &events.FrameMessage{
 		Id: &events.FrameRef{
 			Name: "camera",
-			Id:   fmt.Sprintf("%d%000d", tickerTime.Unix(), tickerTime.Nanosecond()/1000/1000),
+			Id:   fmt.Sprintf("%d%03d", tickerTime.Unix(), tickerTime.Nanosecond()/1000/1000),
 			CreatedAt: &timestamp.Timestamp{
 				Seconds: tickerTime.Unix(),
 				Nanos:   int32(tickerTime.Nanosecond()),
