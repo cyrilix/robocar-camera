@@ -204,6 +204,29 @@ func CompareHist(hist1 Mat, hist2 Mat, method HistCompMethod) float32 {
 	return float32(C.CompareHist(hist1.p, hist2.p, C.int(method)))
 }
 
+// ClipLine clips the line against the image rectangle.
+// For further details, please see:
+// https://docs.opencv.org/master/d6/d6e/group__imgproc__draw.html#gaf483cb46ad6b049bc35ec67052ef1c2c
+//
+func ClipLine(imgSize image.Point, pt1 image.Point, pt2 image.Point) bool {
+	pSize := C.struct_Size{
+		width:  C.int(imgSize.X),
+		height: C.int(imgSize.Y),
+	}
+
+	rPt1 := C.struct_Point{
+		x: C.int(pt1.X),
+		y: C.int(pt1.Y),
+	}
+
+	rPt2 := C.struct_Point{
+		x: C.int(pt2.X),
+		y: C.int(pt2.Y),
+	}
+
+	return bool(C.ClipLine(pSize, rPt1, rPt2))
+}
+
 // BilateralFilter applies a bilateral filter to an image.
 //
 // Bilateral filtering is described here:
@@ -432,18 +455,11 @@ type RotatedRect struct {
 	Angle        float64
 }
 
-// MinAreaRect finds a rotated rectangle of the minimum area enclosing the input 2D point set.
+// toPoints converts C.Contour to []image.Points
 //
-// For further details, please see:
-// https://docs.opencv.org/3.3.0/d3/dc0/group__imgproc__shape.html#ga3d476a3417130ae5154aea421ca7ead9
-//
-func MinAreaRect(points []image.Point) RotatedRect {
-	cPoints := toCPoints(points)
-	result := C.MinAreaRect(cPoints)
-
-	defer C.Points_Close(result.pts)
-	pArray := result.pts.points
-	pLength := int(result.pts.length)
+func toPoints(points C.Contour) []image.Point {
+	pArray := points.points
+	pLength := int(points.length)
 
 	pHdr := reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(pArray)),
@@ -456,15 +472,48 @@ func MinAreaRect(points []image.Point) RotatedRect {
 	for j, pt := range sPoints {
 		points4[j] = image.Pt(int(pt.x), int(pt.y))
 	}
+	return points4
+}
 
+// MinAreaRect finds a rotated rectangle of the minimum area enclosing the input 2D point set.
+//
+// For further details, please see:
+// https://docs.opencv.org/3.3.0/d3/dc0/group__imgproc__shape.html#ga3d476a3417130ae5154aea421ca7ead9
+//
+func MinAreaRect(points []image.Point) RotatedRect {
+	cPoints := toCPoints(points)
+	result := C.MinAreaRect(cPoints)
+
+	defer C.Points_Close(result.pts)
 	return RotatedRect{
-		Contour:      points4,
+		Contour:      toPoints(result.pts),
 		BoundingRect: image.Rect(int(result.boundingRect.x), int(result.boundingRect.y), int(result.boundingRect.x)+int(result.boundingRect.width), int(result.boundingRect.y)+int(result.boundingRect.height)),
 		Center:       image.Pt(int(result.center.x), int(result.center.y)),
 		Width:        int(result.size.width),
 		Height:       int(result.size.height),
 		Angle:        float64(result.angle),
 	}
+}
+
+// FitEllipse Fits an ellipse around a set of 2D points.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/d3/dc0/group__imgproc__shape.html#gaf259efaad93098103d6c27b9e4900ffa
+//
+func FitEllipse(points []image.Point) RotatedRect {
+	cPoints := toCPoints(points)
+	cRect := C.FitEllipse(cPoints)
+	defer C.Points_Close(cRect.pts)
+
+	return RotatedRect{
+		Contour:      toPoints(cRect.pts),
+		BoundingRect: image.Rect(int(cRect.boundingRect.x), int(cRect.boundingRect.y), int(cRect.boundingRect.x)+int(cRect.boundingRect.width), int(cRect.boundingRect.y)+int(cRect.boundingRect.height)),
+		Center:       image.Pt(int(cRect.center.x), int(cRect.center.y)),
+		Width:        int(cRect.size.width),
+		Height:       int(cRect.size.height),
+		Angle:        float64(cRect.angle),
+	}
+
 }
 
 // MinEnclosingCircle finds a circle of the minimum area enclosing the input 2D point set.
@@ -1230,24 +1279,22 @@ func FillPoly(img *Mat, pts [][]image.Point, c color.RGBA) {
 	points := make([]C.struct_Points, len(pts))
 
 	for i, pt := range pts {
-		func() {
-			p := (*C.struct_Point)(C.malloc(C.size_t(C.sizeof_struct_Point * len(pt))))
-			defer C.free(unsafe.Pointer(p))
+		p := (*C.struct_Point)(C.malloc(C.size_t(C.sizeof_struct_Point * len(pt))))
+		defer C.free(unsafe.Pointer(p))
 
-			pa := getPoints(p, len(pt))
+		pa := getPoints(p, len(pt))
 
-			for j, point := range pt {
-				pa[j] = C.struct_Point{
-					x: C.int(point.X),
-					y: C.int(point.Y),
-				}
+		for j, point := range pt {
+			pa[j] = C.struct_Point{
+				x: C.int(point.X),
+				y: C.int(point.Y),
 			}
+		}
 
-			points[i] = C.struct_Points{
-				points: (*C.Point)(p),
-				length: C.int(len(pt)),
-			}
-		}()
+		points[i] = C.struct_Points{
+			points: (*C.Point)(p),
+			length: C.int(len(pt)),
+		}
 	}
 
 	cPoints := C.struct_Contours{
@@ -1296,6 +1343,24 @@ const (
 	FontItalic = 16
 )
 
+// LineType are the line libraries included in OpenCV.
+//
+// For more information, see:
+// https://vovkos.github.io/doxyrest-showcase/opencv/sphinx_rtd_theme/enum_cv_LineTypes.html
+//
+type LineType int
+
+const (
+	// Filled line
+	Filled LineType = -1
+	// Line4 4-connected line
+	Line4 = 4
+	// Line8 8-connected line
+	Line8 = 8
+	// LineAA antialiased line
+	LineAA = 16
+)
+
 // GetTextSize calculates the width and height of a text string.
 // It returns an image.Point with the size required to draw text using
 // a specific font face, scale, and thickness.
@@ -1336,6 +1401,34 @@ func PutText(img *Mat, text string, org image.Point, fontFace HersheyFont, fontS
 	}
 
 	C.PutText(img.p, cText, pOrg, C.int(fontFace), C.double(fontScale), sColor, C.int(thickness))
+	return
+}
+
+// PutTextWithParams draws a text string.
+// It renders the specified text string into the img Mat at the location
+// passed in the "org" param, using the desired font face, font scale,
+// color, and line thinkness.
+//
+// For further details, please see:
+// http://docs.opencv.org/master/d6/d6e/group__imgproc__draw.html#ga5126f47f883d730f633d74f07456c576
+//
+func PutTextWithParams(img *Mat, text string, org image.Point, fontFace HersheyFont, fontScale float64, c color.RGBA, thickness int, lineType LineType, bottomLeftOrigin bool) {
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
+
+	pOrg := C.struct_Point{
+		x: C.int(org.X),
+		y: C.int(org.Y),
+	}
+
+	sColor := C.struct_Scalar{
+		val1: C.double(c.B),
+		val2: C.double(c.G),
+		val3: C.double(c.R),
+		val4: C.double(c.A),
+	}
+
+	C.PutTextWithParams(img.p, cText, pOrg, C.int(fontFace), C.double(fontScale), sColor, C.int(thickness), C.int(lineType), C.bool(bottomLeftOrigin))
 	return
 }
 
@@ -1384,6 +1477,22 @@ func Resize(src Mat, dst *Mat, sz image.Point, fx, fy float64, interp Interpolat
 
 	C.Resize(src.p, dst.p, pSize, C.double(fx), C.double(fy), C.int(interp))
 	return
+}
+
+// GetRectSubPix retrieves a pixel rectangle from an image with sub-pixel accuracy.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/da/d54/group__imgproc__transform.html#ga77576d06075c1a4b6ba1a608850cd614
+func GetRectSubPix(src Mat, patchSize image.Point, center image.Point, dst *Mat) {
+	sz := C.struct_Size{
+		width:  C.int(patchSize.X),
+		height: C.int(patchSize.Y),
+	}
+	pt := C.struct_Point{
+		x: C.int(center.X),
+		y: C.int(center.Y),
+	}
+	C.GetRectSubPix(src.p, sz, pt, dst.p)
 }
 
 // GetRotationMatrix2D calculates an affine matrix of 2D rotation.
@@ -1511,24 +1620,22 @@ func DrawContours(img *Mat, contours [][]image.Point, contourIdx int, c color.RG
 	cntrs := make([]C.struct_Points, len(contours))
 
 	for i, contour := range contours {
-		func() {
-			p := (*C.struct_Point)(C.malloc(C.size_t(C.sizeof_struct_Point * len(contour))))
-			defer C.free(unsafe.Pointer(p))
+		p := (*C.struct_Point)(C.malloc(C.size_t(C.sizeof_struct_Point * len(contour))))
+		defer C.free(unsafe.Pointer(p))
 
-			pa := getPoints(p, len(contour))
+		pa := getPoints(p, len(contour))
 
-			for j, point := range contour {
-				pa[j] = C.struct_Point{
-					x: C.int(point.X),
-					y: C.int(point.Y),
-				}
+		for j, point := range contour {
+			pa[j] = C.struct_Point{
+				x: C.int(point.X),
+				y: C.int(point.Y),
 			}
+		}
 
-			cntrs[i] = C.struct_Points{
-				points: (*C.Point)(p),
-				length: C.int(len(contour)),
-			}
-		}()
+		cntrs[i] = C.struct_Points{
+			points: (*C.Point)(p),
+			length: C.int(len(contour)),
+		}
 	}
 
 	cContours := C.struct_Contours{
@@ -1594,6 +1701,18 @@ func LogPolar(src Mat, dst *Mat, center image.Point, m float64, flags Interpolat
 		y: C.int(center.Y),
 	}
 	C.LogPolar(src.p, dst.p, centerP, C.double(m), C.int(flags))
+}
+
+// LinearPolar remaps an image to polar coordinates space.
+//
+// For further details, please see:
+// https://docs.opencv.org/master/da/d54/group__imgproc__transform.html#gaa38a6884ac8b6e0b9bed47939b5362f3
+func LinearPolar(src Mat, dst *Mat, center image.Point, maxRadius float64, flags InterpolationFlags) {
+	centerP := C.struct_Point{
+		x: C.int(center.X),
+		y: C.int(center.Y),
+	}
+	C.LinearPolar(src.p, dst.p, centerP, C.double(maxRadius), C.int(flags))
 }
 
 // DistanceTypes types for Distance Transform and M-estimatorss
@@ -1664,4 +1783,8 @@ func (c *CLAHE) Close() error {
 //
 func (c *CLAHE) Apply(src Mat, dst *Mat) {
 	C.CLAHE_Apply((C.CLAHE)(c.p), src.p, dst.p)
+}
+
+func InvertAffineTransform(src Mat, dst *Mat) {
+	C.InvertAffineTransform(src.p, dst.p)
 }

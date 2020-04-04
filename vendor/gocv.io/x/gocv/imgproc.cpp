@@ -95,6 +95,28 @@ double CompareHist(Mat hist1, Mat hist2, int method) {
     return cv::compareHist(*hist1, *hist2, method);
 }
 
+struct RotatedRect FitEllipse(Points points)
+{
+  Point *rpts = new Point[points.length];
+  std::vector<cv::Point> pts;
+
+  for (size_t i = 0; i < points.length; i++)
+  {
+    pts.push_back(cv::Point(points.points[i].x, points.points[i].y));
+    Point pt = {points.points[i].x, points.points[i].y};
+    rpts[i] = pt;
+  }
+
+  cv::RotatedRect bRect = cv::fitEllipse(pts);
+
+  Rect r = {bRect.boundingRect().x, bRect.boundingRect().y, bRect.boundingRect().width, bRect.boundingRect().height};
+  Point centrpt = {int(lroundf(bRect.center.x)), int(lroundf(bRect.center.y))};
+  Size szsz = {int(lroundf(bRect.size.width)), int(lroundf(bRect.size.height))};
+
+  RotatedRect rotRect = {(Contour){rpts, 4}, r, centrpt, szsz, bRect.angle};
+  return rotRect;
+}
+
 void ConvexHull(Contour points, Mat hull, bool clockwise, bool returnPoints) {
     std::vector<cv::Point> pts;
 
@@ -377,6 +399,14 @@ void ArrowedLine(Mat img, Point pt1, Point pt2, Scalar color, int thickness) {
     cv::arrowedLine(*img, p1, p2, c, thickness);
 }
 
+bool ClipLine(Size imgSize, Point pt1, Point pt2) {
+	cv::Size sz(imgSize.width, imgSize.height);
+	cv::Point p1(pt1.x, pt1.y);
+	cv::Point p2(pt2.x, pt2.y);
+
+	return	cv::clipLine(sz, p1, p2);
+}
+
 void Circle(Mat img, Point center, int radius, Scalar color, int thickness) {
     cv::Point p1(center.x, center.y);
     cv::Scalar c = cv::Scalar(color.val1, color.val2, color.val3, color.val4);
@@ -446,9 +476,22 @@ void PutText(Mat img, const char* text, Point org, int fontFace, double fontScal
     cv::putText(*img, text, pt, fontFace, fontScale, c, thickness);
 }
 
+void PutTextWithParams(Mat img, const char* text, Point org, int fontFace, double fontScale,
+                       Scalar color, int thickness, int lineType, bool bottomLeftOrigin) {
+    cv::Point pt(org.x, org.y);
+    cv::Scalar c = cv::Scalar(color.val1, color.val2, color.val3, color.val4);
+    cv::putText(*img, text, pt, fontFace, fontScale, c, thickness, lineType, bottomLeftOrigin);
+}
+
 void Resize(Mat src, Mat dst, Size dsize, double fx, double fy, int interp) {
     cv::Size sz(dsize.width, dsize.height);
     cv::resize(*src, *dst, sz, fx, fy, interp);
+}
+
+void GetRectSubPix(Mat src, Size patchSize, Point center, Mat dst) {
+    cv::Size sz(patchSize.width, patchSize.height);
+    cv::Point pt(center.x, center.y);
+    cv::getRectSubPix(*src, sz, pt, *dst);
 }
 
 Mat GetRotationMatrix2D(Point center, double angle, double scale) {
@@ -557,6 +600,11 @@ void FitLine(Contour points, Mat line, int distType, double param, double reps, 
 	cv::fitLine(pts, *line, distType, param, reps, aeps);
 }
 
+void LinearPolar(Mat src, Mat dst, Point center, double maxRadius, int flags) {
+	cv::Point2f centerPt(center.x, center.y);
+	cv::linearPolar(*src, *dst, centerPt, maxRadius, flags);
+}
+
 CLAHE CLAHE_Create() {
     return new cv::Ptr<cv::CLAHE>(cv::createCLAHE());
 }
@@ -572,4 +620,8 @@ void CLAHE_Close(CLAHE c) {
 
 void CLAHE_Apply(CLAHE c, Mat src, Mat dst) {
     (*c)->apply(*src, *dst);
+}
+
+void InvertAffineTransform(Mat src, Mat dst) {
+	cv::invertAffineTransform(*src, *dst);
 }

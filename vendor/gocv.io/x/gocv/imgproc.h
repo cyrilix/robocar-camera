@@ -40,6 +40,7 @@ struct Rect BoundingRect(Contour con);
 void BoxPoints(RotatedRect rect, Mat boxPts);
 double ContourArea(Contour con);
 struct RotatedRect MinAreaRect(Points points);
+struct RotatedRect FitEllipse(Points points);
 void MinEnclosingCircle(Points points, Point2f* center, float* radius);
 struct Contours FindContours(Mat src, int mode, int method);
 int ConnectedComponents(Mat src, Mat dst, int connectivity, int ltype, int ccltype);
@@ -83,7 +84,10 @@ void FillPoly(Mat img, Contours points, Scalar color);
 struct Size GetTextSize(const char* text, int fontFace, double fontScale, int thickness);
 void PutText(Mat img, const char* text, Point org, int fontFace, double fontScale,
              Scalar color, int thickness);
+void PutTextWithParams(Mat img, const char* text, Point org, int fontFace, double fontScale,
+                         Scalar color, int thickness, int lineType, bool bottomLeftOrigin);
 void Resize(Mat src, Mat dst, Size sz, double fx, double fy, int interp);
+void GetRectSubPix(Mat src, Size patchSize, Point center, Mat dst);
 Mat GetRotationMatrix2D(Point center, double angle, double scale);
 void WarpAffine(Mat src, Mat dst, Mat rot_mat, Size dsize);
 void WarpAffineWithParams(Mat src, Mat dst, Mat rot_mat, Size dsize, int flags, int borderMode,
@@ -101,10 +105,13 @@ void Filter2D(Mat src, Mat dst, int ddepth, Mat kernel, Point anchor, double del
 void SepFilter2D(Mat src, Mat dst, int ddepth, Mat kernelX, Mat kernelY, Point anchor, double delta, int borderType);
 void LogPolar(Mat src, Mat dst, Point center, double m, int flags);
 void FitLine(Contour points, Mat line, int distType, double param, double reps, double aeps);
+void LinearPolar(Mat src, Mat dst, Point center, double maxRadius, int flags);
+bool ClipLine(Size imgSize, Point pt1, Point pt2);
 CLAHE CLAHE_Create();
 CLAHE CLAHE_CreateWithParams(double clipLimit, Size tileGridSize);
 void CLAHE_Close(CLAHE c);
 void CLAHE_Apply(CLAHE c, Mat src, Mat dst);
+void InvertAffineTransform(Mat src, Mat dst);
 
 #ifdef __cplusplus
 }

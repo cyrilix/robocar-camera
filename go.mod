@@ -8,5 +8,5 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/golang/protobuf v1.3.4
 	github.com/sirupsen/logrus v1.4.2
-	gocv.io/x/gocv v0.21.0
+	gocv.io/x/gocv v0.22.0
 )
