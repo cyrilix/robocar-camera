@@ -1,21 +1,27 @@
 # github.com/cyrilix/robocar-base v0.1.0
+## explicit
 github.com/cyrilix/robocar-base/cli
 github.com/cyrilix/robocar-base/service
 # github.com/cyrilix/robocar-protobuf/go v1.0.0
+## explicit
 github.com/cyrilix/robocar-protobuf/go/events
 # github.com/eclipse/paho.mqtt.golang v1.2.0
+## explicit
 github.com/eclipse/paho.mqtt.golang
 github.com/eclipse/paho.mqtt.golang/packets
 # github.com/golang/protobuf v1.3.4
+## explicit
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/sirupsen/logrus v1.4.2
+## explicit
 github.com/sirupsen/logrus
 # gocv.io/x/gocv v0.21.0
+## explicit
 gocv.io/x/gocv
-# golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
+# golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
 golang.org/x/net/websocket
