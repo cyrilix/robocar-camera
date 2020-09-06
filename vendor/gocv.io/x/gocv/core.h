@@ -56,8 +56,17 @@ typedef struct Points {
     int length;
 } Points;
 
+// Wrapper for the vector of Point2f structs aka std::vector<Point2f>
+typedef struct Points2f {
+    Point2f* points;
+    int length;
+} Points2f;
+
 // Contour is alias for Points
 typedef Points Contour;
+
+// Contour2f is alias for Points2f
+typedef Points2f Contour2f;
 
 // Wrapper for the vector of Points vectors aka std::vector< std::vector<Point> >
 typedef struct Contours {
@@ -347,6 +356,7 @@ void Mat_MinMaxIdx(Mat m, double* minVal, double* maxVal, int* minIdx, int* maxI
 void Mat_MinMaxLoc(Mat m, double* minVal, double* maxVal, Point* minLoc, Point* maxLoc);
 void Mat_MulSpectrums(Mat a, Mat b, Mat c, int flags);
 void Mat_Multiply(Mat src1, Mat src2, Mat dst);
+void Mat_MultiplyWithParams(Mat src1, Mat src2, Mat dst, double scale, int dtype);
 void Mat_Subtract(Mat src1, Mat src2, Mat dst);
 void Mat_Normalize(Mat src, Mat dst, double alpha, double beta, int typ);
 double Norm(Mat src1, int normType);
@@ -377,6 +387,8 @@ double GetTickFrequency();
 
 Mat Mat_rowRange(Mat m,int startrow,int endrow);
 Mat Mat_colRange(Mat m,int startrow,int endrow);
+
+void IntVector_Close(struct IntVector ivec);
 
 #ifdef __cplusplus
 }

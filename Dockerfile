@@ -1,7 +1,9 @@
+ARG OPENCV_VERSION=v4.4.0
+
 FROM golang:alpine as gobuilder
 
 
-FROM cyrilix/opencv-buildstage:4.2.0 as builder
+FROM cyrilix/opencv-buildstage:${OPENCV_VERSION} as builder
 
 LABEL maintainer="Cyrille Nofficial"
 
@@ -24,7 +26,7 @@ RUN CGO_LDFLAGS="$(pkg-config --libs opencv4)" \
 
 
 
-FROM cyrilix/opencv-runtime:4.2.0
+FROM cyrilix/opencv-runtime:${OPENCV_VERSION}
 
 ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib64
 
