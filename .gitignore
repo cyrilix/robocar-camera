@@ -283,3 +283,4 @@ local.properties
 *.code-workspace
 
 ./rc-*
+rc-camera
