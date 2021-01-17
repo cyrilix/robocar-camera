@@ -494,7 +494,11 @@ void Polylines(Mat img, Contours points, bool isClosed, Scalar color,int thickne
 }
 
 struct Size GetTextSize(const char* text, int fontFace, double fontScale, int thickness) {
-    cv::Size sz = cv::getTextSize(text, fontFace, fontScale, thickness, NULL);
+    return GetTextSizeWithBaseline(text, fontFace, fontScale, thickness, NULL);
+}
+
+struct Size GetTextSizeWithBaseline(const char* text, int fontFace, double fontScale, int thickness, int* baesline) {
+    cv::Size sz = cv::getTextSize(text, fontFace, fontScale, thickness, baesline);
     Size size = {sz.width, sz.height};
     return size;
 }
@@ -710,4 +714,35 @@ Point2f PhaseCorrelate(Mat src1, Mat src2, Mat window, double* response) {
         .y = float(result.y),
     };
     return result2f;
+}
+
+void Mat_Accumulate(Mat src, Mat dst) {
+    cv::accumulate(*src, *dst);
+}
+void Mat_AccumulateWithMask(Mat src, Mat dst, Mat mask) {
+    cv::accumulate(*src, *dst, *mask);
+}
+
+void Mat_AccumulateSquare(Mat src, Mat dst) {
+    cv::accumulateSquare(*src, *dst);
+}
+
+void Mat_AccumulateSquareWithMask(Mat src, Mat dst, Mat mask) {
+    cv::accumulateSquare(*src, *dst, *mask);
+}
+
+void Mat_AccumulateProduct(Mat src1, Mat src2, Mat dst) {
+    cv::accumulateProduct(*src1, *src2, *dst);
+}
+
+void Mat_AccumulateProductWithMask(Mat src1, Mat src2, Mat dst, Mat mask) {
+    cv::accumulateProduct(*src1, *src2, *dst, *mask);
+}
+
+void Mat_AccumulatedWeighted(Mat src, Mat dst, double alpha) {
+    cv::accumulateWeighted(*src, *dst, alpha);
+}
+
+void Mat_AccumulatedWeightedWithMask(Mat src, Mat dst, double alpha, Mat mask) {
+    cv::accumulateWeighted(*src, *dst, alpha, *mask);
 }

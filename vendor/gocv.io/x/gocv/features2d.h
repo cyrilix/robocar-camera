@@ -19,6 +19,7 @@ typedef cv::Ptr<cv::MSER>* MSER;
 typedef cv::Ptr<cv::ORB>* ORB;
 typedef cv::Ptr<cv::SimpleBlobDetector>* SimpleBlobDetector;
 typedef cv::Ptr<cv::BFMatcher>* BFMatcher;
+typedef cv::Ptr<cv::FlannBasedMatcher>* FlannBasedMatcher;
 typedef cv::Ptr<cv::SIFT>* SIFT;
 #else
 typedef void* AKAZE;
@@ -31,6 +32,7 @@ typedef void* MSER;
 typedef void* ORB;
 typedef void* SimpleBlobDetector;
 typedef void* BFMatcher;
+typedef void* FlannBasedMatcher;
 typedef void* SIFT;
 #endif
 
@@ -82,12 +84,18 @@ BFMatcher BFMatcher_CreateWithParams(int normType, bool crossCheck);
 void BFMatcher_Close(BFMatcher b);
 struct MultiDMatches BFMatcher_KnnMatch(BFMatcher b, Mat query, Mat train, int k);
 
+FlannBasedMatcher FlannBasedMatcher_Create();
+void FlannBasedMatcher_Close(FlannBasedMatcher f);
+struct MultiDMatches FlannBasedMatcher_KnnMatch(FlannBasedMatcher f, Mat query, Mat train, int k);
+
 void DrawKeyPoints(Mat src, struct KeyPoints kp, Mat dst, const Scalar s, int flags);
 
 SIFT SIFT_Create();
 void SIFT_Close(SIFT f);
 struct KeyPoints SIFT_Detect(SIFT f, Mat src);
 struct KeyPoints SIFT_DetectAndCompute(SIFT f, Mat src, Mat mask, Mat desc);
+
+void DrawMatches(Mat img1, struct KeyPoints kp1, Mat img2, struct KeyPoints kp2, struct DMatches matches1to2, Mat outImg, const Scalar matchesColor, const Scalar pointColor, struct ByteArray matchesMask, int flags);
 
 #ifdef __cplusplus
 }

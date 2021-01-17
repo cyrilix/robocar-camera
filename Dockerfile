@@ -1,4 +1,4 @@
-ARG OPENCV_VERSION=v4.4.0
+ARG OPENCV_VERSION=v4.5.1
 
 FROM golang:alpine as gobuilder
 

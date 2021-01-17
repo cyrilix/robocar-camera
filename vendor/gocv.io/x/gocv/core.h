@@ -232,18 +232,23 @@ void MultiDMatches_Close(struct MultiDMatches mds);
 
 Mat Mat_New();
 Mat Mat_NewWithSize(int rows, int cols, int type);
+Mat Mat_NewWithSizes(struct IntVector sizes, int type);
+Mat Mat_NewWithSizesFromScalar(IntVector sizes, int type, Scalar ar);
+Mat Mat_NewWithSizesFromBytes(IntVector sizes, int type, struct ByteArray buf);
 Mat Mat_NewFromScalar(const Scalar ar, int type);
 Mat Mat_NewWithSizeFromScalar(const Scalar ar, int rows, int cols, int type);
 Mat Mat_NewFromBytes(int rows, int cols, int type, struct ByteArray buf);
 Mat Mat_FromPtr(Mat m, int rows, int cols, int type, int prows, int pcols);
 void Mat_Close(Mat m);
 int Mat_Empty(Mat m);
+bool Mat_IsContinuous(Mat m);
 Mat Mat_Clone(Mat m);
 void Mat_CopyTo(Mat m, Mat dst);
 int Mat_Total(Mat m);
 void Mat_Size(Mat m, IntVector* res);
 void Mat_CopyToWithMask(Mat m, Mat dst, Mat mask);
 void Mat_ConvertTo(Mat m, Mat dst, int type);
+void Mat_ConvertToWithParams(Mat m, Mat dst, int type, float alpha, float beta);
 struct ByteArray Mat_ToBytes(Mat m);
 struct ByteArray Mat_DataPtr(Mat m);
 Mat Mat_Region(Mat m, Rect r);
@@ -258,6 +263,9 @@ int Mat_Cols(Mat m);
 int Mat_Channels(Mat m);
 int Mat_Type(Mat m);
 int Mat_Step(Mat m);
+Mat Eye(int rows, int cols, int type);
+Mat Zeros(int rows, int cols, int type);
+Mat Ones(int rows, int cols, int type);
 
 uint8_t Mat_GetUChar(Mat m, int row, int col);
 uint8_t Mat_GetUChar3(Mat m, int x, int y, int z);
@@ -354,12 +362,14 @@ void Mat_Merge(struct Mats mats, Mat dst);
 void Mat_Min(Mat src1, Mat src2, Mat dst);
 void Mat_MinMaxIdx(Mat m, double* minVal, double* maxVal, int* minIdx, int* maxIdx);
 void Mat_MinMaxLoc(Mat m, double* minVal, double* maxVal, Point* minLoc, Point* maxLoc);
+void Mat_MixChannels(struct Mats src, struct Mats dst, struct IntVector fromTo);
 void Mat_MulSpectrums(Mat a, Mat b, Mat c, int flags);
 void Mat_Multiply(Mat src1, Mat src2, Mat dst);
 void Mat_MultiplyWithParams(Mat src1, Mat src2, Mat dst, double scale, int dtype);
 void Mat_Subtract(Mat src1, Mat src2, Mat dst);
 void Mat_Normalize(Mat src, Mat dst, double alpha, double beta, int typ);
 double Norm(Mat src1, int normType);
+double NormWithMats(Mat src1, Mat src2, int normType);
 void Mat_PerspectiveTransform(Mat src, Mat dst, Mat tm);
 bool Mat_Solve(Mat src1, Mat src2, Mat dst, int flags);
 int Mat_SolveCubic(Mat coeffs, Mat roots);
@@ -389,6 +399,8 @@ Mat Mat_rowRange(Mat m,int startrow,int endrow);
 Mat Mat_colRange(Mat m,int startrow,int endrow);
 
 void IntVector_Close(struct IntVector ivec);
+
+void CStrings_Close(struct CStrings cstrs);
 
 #ifdef __cplusplus
 }

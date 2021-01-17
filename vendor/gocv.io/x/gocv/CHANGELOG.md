@@ -1,3 +1,85 @@
+0.26.0
+---
+* **all**
+    * update to OpenCV 4.5.1
+* **core**
+    * add Matrix initializers: eye, ones, zeros (#758)
+    * add multidimensional mat creation
+    * add ndim mat constructor
+    * added accumulators
+    * added norm call with two mats (#600)
+    * keep a reference to a []byte that backs a Mat. (#755)
+    * remove guard for DataPtrUint8 since any Mat can be treated an Uint8
+    * add Mat IsContinuous() function, and ensure that any Mat data pointers used to create Go slices only apply to continuous Mats
+    * fix buffer size for Go strings for 32-bit operating systems
+* **build**
+    * bring back codecov.io
+* **calib3d**
+    * correctly close mat after test
+* **dnn**
+    * add ReadNetFromONNX and ReadNetFromONNXBytes (#760)
+    * increase test coverage
+* **docker**
+    * dockerfiles for opencv gpu builds
+* **docs**
+    * corrected links to CUDA and OpenVINO
+    * list all unimplemented functions in photo module
+    * replace GoDocs with pkg docs
+    * update ROADMAP from recent contributions
+* **imgproc**
+    * add test coverage for GetTextSizeWithBaseline()
+    * close all Mats even those based on memory slices
+    * close Mat to avoid memory leak in ToImage()
+    * refactoring of ToImage and ImageToMatXX functions
+* **openvino**
+    * fix dldt repo in makefile for openvino
+* **os**
+    * adding gcc-c++ package to rpm deps
+* **photo**
+    * add SeamlessClone function
+* **profile**
+    * add created mats in Split and ForwardLayers to profile (#780)
+
+0.25.0
+---
+* **all**
+    * update to opencv release 4.5.0
+* **build** 
+    * add file dependencies needed for DNN tests
+    * add verbose output for tests on CircleCI
+    * also run unit tests on non-free algorithms. YMMV.
+    * fix build with cuda
+    * remove Travis and switch to CircleCI using Docker based builds
+    * update CI builds to Go 1.15
+* **core**
+    * add mixChannels() method to Mat (#746)
+    * Add toGoStrings helper
+    * support ConvertToWithParams method
+* **dnn**
+    * Add NMSBoxes function (#736)
+    * Added ability to load Torch file. Tested features for extracting 128d vectors
+    * fix using wrong type for unconnectedlayertype
+    * use default ddepth for conversions to blob from image as recommended by @berak
+* **docker** 
+    * use separate dockerfile for opencv to avoid massive rebuild
+* **docs**
+    * add recent contributions to ROADMAP and also add cuda functions still in need of implementation
+    * display CircleCI badge in README
+    * minor improvements to CUDA docs in READMEs
+* **features2d**
+    * add FlannBasedMatcher
+    * add drawmatches (#720)
+    * fix memory leak in SIFT
+* **highgui**
+    * refactored ROI methods
+* **imgproc**
+    * Add option to return baseline with GetTextSizeWithBaseline
+* **objdetect** 
+    * Add QRCode DetectAndDecodeMulti
+* **videoio**
+    * Add video capture properties and set preferred api backend (#739)
+    * fix needed as discussed in golang/go issue #32479
+
 0.24.0
 ---
 * **all**
