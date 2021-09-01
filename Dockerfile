@@ -1,6 +1,6 @@
 ARG OPENCV_VERSION=v4.5.1
 
-FROM golang:alpine as gobuilder
+FROM golang:1.17-alpine as gobuilder
 
 
 FROM cyrilix/opencv-buildstage:${OPENCV_VERSION} as builder
