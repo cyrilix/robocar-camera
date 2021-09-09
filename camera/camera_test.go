@@ -10,7 +10,6 @@ import (
 	"log"
 	"sync"
 	"testing"
-	"time"
 )
 
 type fakeVideoSource struct {
@@ -37,10 +36,13 @@ func TestOpencvCameraPart(t *testing.T) {
 	defer func() {
 		publish = oldPublish
 	}()
+	waitEvent := sync.WaitGroup{}
+	waitEvent.Add(1)
 	publish = func(_ mqtt.Client, topic string, payload *[]byte) {
 		muPubEvents.Lock()
 		defer muPubEvents.Unlock()
 		publishedEvents[topic] = payload
+		waitEvent.Done()
 	}
 
 	const topic = "topic/test/camera"
@@ -50,12 +52,12 @@ func TestOpencvCameraPart(t *testing.T) {
 		client:           nil,
 		vc:               fakeVideoSource{},
 		topic:            topic,
-		publishFrequency: 1000,
+		publishFrequency: 2, // Send 2 img/s for tests
 		imgBuffered:      &imgBuffer,
 	}
 
 	go part.Start()
-	time.Sleep(5 * time.Millisecond)
+	waitEvent.Wait()
 
 	var frameMsg events.FrameMessage
 	muPubEvents.Lock()
