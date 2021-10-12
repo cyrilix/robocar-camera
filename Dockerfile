@@ -1,9 +1,9 @@
-ARG OPENCV_VERSION=v4.5.1
+ARG OPENCV_VERSION=v4.5.3
 
-FROM golang:1.17-alpine as gobuilder
+FROM docker.io/golang:1.17-alpine as gobuilder
 
 
-FROM cyrilix/opencv-buildstage:${OPENCV_VERSION} as builder
+FROM docker.io/cyrilix/opencv-buildstage:${OPENCV_VERSION} as builder
 
 LABEL maintainer="Cyrille Nofficial"
 
@@ -26,7 +26,7 @@ RUN CGO_LDFLAGS="$(pkg-config --libs opencv4)" \
 
 
 
-FROM cyrilix/opencv-runtime:${OPENCV_VERSION}
+FROM docker.io/cyrilix/opencv-runtime:${OPENCV_VERSION}
 
 ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib64
 
