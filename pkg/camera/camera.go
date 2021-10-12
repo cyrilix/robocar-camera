@@ -19,9 +19,9 @@ type VideoSource interface {
 }
 
 type OpencvCameraPart struct {
-	client           mqtt.Client
-	vc               VideoSource
-	topic            string
+	client mqtt.Client
+	vc     VideoSource
+	topic  string
 	publishFrequency int
 	muImgBuffered    sync.Mutex
 	imgBuffered      *gocv.Mat

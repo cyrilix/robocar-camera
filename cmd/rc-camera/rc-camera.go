@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/cyrilix/robocar-base/cli"
-	"github.com/cyrilix/robocar-camera/camera"
+	"github.com/cyrilix/robocar-camera/pkg/camera"
 	"go.uber.org/zap"
 	"gocv.io/x/gocv"
 	"log"
