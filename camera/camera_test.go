@@ -5,9 +5,9 @@ import (
 	"github.com/cyrilix/robocar-protobuf/go/events"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 	"gocv.io/x/gocv"
 	"image/jpeg"
-	"log"
 	"sync"
 	"testing"
 )
@@ -22,7 +22,7 @@ func (f fakeVideoSource) Close() error {
 func (f fakeVideoSource) Read(dest *gocv.Mat) bool {
 	img := gocv.IMRead("testdata/img.jpg", gocv.IMReadUnchanged)
 	if img.Total() == 0 {
-		log.Print("image read is empty")
+		zap.S().Info("image read is empty")
 		return false
 	}
 	img.CopyTo(dest)

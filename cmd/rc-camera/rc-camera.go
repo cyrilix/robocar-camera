@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/cyrilix/robocar-base/cli"
 	"github.com/cyrilix/robocar-camera/camera"
+	"go.uber.org/zap"
 	"gocv.io/x/gocv"
 	"log"
 	"os"
@@ -15,6 +16,7 @@ func main() {
 	var mqttBroker, username, password, clientId, topicBase string
 	var pubFrequency int
 	var device, videoWidth, videoHeight int
+	var debug bool
 
 	mqttQos := cli.InitIntFlag("MQTT_QOS", 0)
 	_, mqttRetain := os.LookupEnv("MQTT_RETAIN")
@@ -28,15 +30,34 @@ func main() {
 	flag.IntVar(&videoWidth, "video-width", 160, "Video pixels width")
 	flag.IntVar(&videoHeight, "video-height", 128, "Video pixels height")
 
+	flag.BoolVar(&debug, "debug", false, "Display raw value to debug")
+
 	flag.Parse()
 	if len(os.Args) <= 1 {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
+	config := zap.NewDevelopmentConfig()
+	if debug {
+		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	} else {
+		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	}
+	lgr, err := config.Build()
+	if err != nil {
+		log.Fatalf("unable to init logger: %v", err)
+	}
+	defer func() {
+		if err := lgr.Sync(); err != nil {
+			log.Printf("unable to Sync logger: %v\n", err)
+		}
+	}()
+	zap.ReplaceGlobals(lgr)
+
 	client, err := cli.Connect(mqttBroker, username, password, clientId)
 	if err != nil {
-		log.Fatalf("unable to connect to mqtt broker: %v", err)
+		zap.S().Fatalf("unable to connect to mqtt broker: %v", err)
 	}
 	defer client.Disconnect(10)
 
@@ -51,6 +72,6 @@ func main() {
 
 	err = c.Start()
 	if err != nil {
-		log.Fatalf("unable to start service: %v", err)
+		zap.S().Fatalf("unable to start service: %v", err)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"gocv.io/x/gocv"
 	"io"
 	"sync"
@@ -29,11 +29,11 @@ type OpencvCameraPart struct {
 }
 
 func New(client mqtt.Client, topic string, publishFrequency int, videoProperties map[gocv.VideoCaptureProperties]float64) *OpencvCameraPart {
-	log.Infof("run camera part")
+	zap.S().Info("run camera part")
 
 	vc, err := gocv.OpenVideoCapture(0)
 	if err != nil {
-		log.Fatalf("unable to open video device: %v", err)
+		zap.S().Fatalf("unable to open video device: %v", err)
 	}
 	for k, v := range videoProperties {
 		vc.Set(k, v)
@@ -51,7 +51,7 @@ func New(client mqtt.Client, topic string, publishFrequency int, videoProperties
 }
 
 func (o *OpencvCameraPart) Start() error {
-	log.Printf("start camera")
+	zap.S().Info("start camera")
 	o.cancel = make(chan interface{})
 	ticker := time.NewTicker(1 * time.Second / time.Duration(o.publishFrequency))
 	defer ticker.Stop()
@@ -68,14 +68,14 @@ func (o *OpencvCameraPart) Start() error {
 }
 
 func (o *OpencvCameraPart) Stop() {
-	log.Print("close video device")
+	zap.S().Info("close video device")
 	close(o.cancel)
 
 	if err := o.vc.Close(); err != nil {
-		log.Printf("unexpected error while VideoCapture is closed: %v", err)
+		zap.S().Errorf("unexpected error while VideoCapture is closed: %v", err)
 	}
 	if err := o.imgBuffered.Close(); err != nil {
-		log.Printf("unexpected error while VideoCapture is closed: %v", err)
+		zap.S().Errorf("unexpected error while VideoCapture is closed: %v", err)
 	}
 }
 
@@ -87,7 +87,7 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time) {
 
 	img, err := gocv.IMEncode(gocv.JPEGFileExt, *o.imgBuffered)
 	if err != nil {
-		log.Printf("unable to convert image to jpeg: %v", err)
+		zap.S().Errorf("unable to convert image to jpeg: %v", err)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time) {
 
 	payload, err := proto.Marshal(msg)
 	if err != nil {
-		log.Errorf("unable to marshal protobuf message: %v", err)
+		zap.S().Errorf("unable to marshal protobuf message: %v", err)
 	}
 
 	publish(o.client, o.topic, &payload)
@@ -115,6 +115,6 @@ var publish = func(client mqtt.Client, topic string, payload *[]byte) {
 	token := client.Publish(topic, 0, false, *payload)
 	token.WaitTimeout(10 * time.Millisecond)
 	if err := token.Error(); err != nil {
-		log.Errorf("unable to publish frame: %v", err)
+		zap.S().Errorf("unable to publish frame: %v", err)
 	}
 }
