@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/cyrilix/robocar-base/cli"
 	"github.com/cyrilix/robocar-camera/pkg/camera"
 	"go.uber.org/zap"
@@ -13,8 +14,8 @@ import (
 const DefaultClientId = "robocar-camera"
 
 func main() {
-	var mqttBroker, username, password, clientId, topicBase string
-	var pubFrequency int
+	var mqttBroker, username, password, clientId, topicBase, topicRoi string
+	var pubFrequency, horizon int
 	var device, videoWidth, videoHeight int
 	var debug bool
 
@@ -22,13 +23,19 @@ func main() {
 	_, mqttRetain := os.LookupEnv("MQTT_RETAIN")
 
 	cli.InitMqttFlags(DefaultClientId, &mqttBroker, &username, &password, &clientId, &mqttQos, &mqttRetain)
-
+	err := cli.SetIntDefaultValueFromEnv(&horizon, "HORIZON", 0)
+	if err != nil {
+		log.Printf("unable to parse horizon value arg: %v", err)
+	}
 	flag.StringVar(&topicBase, "mqtt-topic", os.Getenv("MQTT_TOPIC"), "Mqtt topic to publish camera frames, use MQTT_TOPIC if args not set")
+	flag.StringVar(&topicRoi, "mqtt-topic-roi", os.Getenv("MQTT_TOPIC_ROI"), "Mqtt topic to publish camera frames cropped to horizon value, mqtt-topic value with '-roi' suffix if args not set")
 	flag.IntVar(&pubFrequency, "mqtt-pub-frequency", 25., "Number of messages to publish per second")
 
 	flag.IntVar(&device, "video-device", 0, "Video device number")
 	flag.IntVar(&videoWidth, "video-width", 160, "Video pixels width")
 	flag.IntVar(&videoHeight, "video-height", 128, "Video pixels height")
+
+	flag.IntVar(&horizon, "horizon", horizon, "Limit region of interest to horizon in pixels from top, use HORIZON if args not set")
 
 	flag.BoolVar(&debug, "debug", false, "Display raw value to debug")
 
@@ -65,7 +72,10 @@ func main() {
 	videoProperties[gocv.VideoCaptureFrameWidth] = float64(videoWidth)
 	videoProperties[gocv.VideoCaptureFrameHeight] = float64(videoHeight)
 
-	c := camera.New(client, topicBase, pubFrequency, videoProperties)
+	if topicRoi == "" {
+		topicRoi = fmt.Sprintf( "%s-roi", topicBase)
+	}
+	c := camera.New(client, topicBase, topicRoi, pubFrequency, videoProperties, horizon)
 	defer c.Stop()
 
 	cli.HandleExit(c)
