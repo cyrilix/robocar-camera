@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"github.com/cyrilix/robocar-protobuf/go/events"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gocv.io/x/gocv"
+	"google.golang.org/protobuf/proto"
 	"image/jpeg"
 	"sync"
 	"testing"
@@ -90,12 +90,12 @@ func TestOpencvCameraPart(t *testing.T) {
 
 		// Uncomment to debug image cropping
 		/*
-		dir, f := path.Split(fmt.Sprintf("/tmp/%s.jpg", tpc))
-		 os.MkdirAll(dir, os.FileMode(0755))
-		err = ioutil.WriteFile(path.Join(dir, f), frameMsg.GetFrame(), os.FileMode(0644) )
-		if err != nil {
-			t.Errorf("unable to write image for topic %s: %v", tpc, err)
-		}
-		 */
+			dir, f := path.Split(fmt.Sprintf("/tmp/%s.jpg", tpc))
+			 os.MkdirAll(dir, os.FileMode(0755))
+			err = ioutil.WriteFile(path.Join(dir, f), frameMsg.GetFrame(), os.FileMode(0644) )
+			if err != nil {
+				t.Errorf("unable to write image for topic %s: %v", tpc, err)
+			}
+		*/
 	}
 }

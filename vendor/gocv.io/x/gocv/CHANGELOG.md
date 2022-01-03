@@ -1,3 +1,107 @@
+0.29.0
+---
+* **all**
+    * update to OpenCV 4.5.4
+* **build**
+    * add static build ability on windows
+    * use tbb for all builds for CPU accelerated operations
+* **cuda**
+    * implement a bunch of per-element operations
+    * add get/set/reset device functions
+    * add NewGpuMatWithSize() to preallocate device memory
+    * Reshape() returns a new GpuMat with the changed data
+    * correct use of Stream by adding WaitForCompletion() and passing pre-allocated GpuMats
+* **docs**
+    * update ROADMAP from recent contributions
+* **videoio**
+    * Fix open video capture with api test (#895)
+* **calib3d**
+    * added EstimateAffine2D
+    * findChessboardCornersSB
+* **aruco**
+    * added many functions as part of initial implementation
+
+0.28.0
+---
+* **all**
+    * update to OpenCV 4.5.3
+    * make task and build tag for static build of OpenCV/GoCV on Linux
+    * add Makefile tasks for OpenCV install on Nvidia Jetson
+    * add gotest for more colorful test output running tests from containers
+* **build**
+    * correcting output format for code coverage report
+    * enforce rule that all Go code is correctly formatted
+    * remove codecov
+* **core**
+    * add NewPointVectorFromMat() and NewPoint2fVectorFromMat() functions
+    * Fix possible MatProfile race by ordering remove before free.
+* **cuda**
+    * add core functions for GpuMat like Cols(), Rows(), and Type()
+    * initial implementation for the Flip function
+* **docs**
+    * update ROADMAP from recent contributions
+* **examples**
+    * correct list of examples and fix comment
+* **features2d**
+    * Add NewORBWithParams
+* **tracking**
+    * change MOSSE to KCF
+* **highgui**
+    * Add function CreateTrackbarWithValue to Window type.
+* **imgcodec**
+    * optimize IMEncode avoiding multiple data copies.
+* **imgproc**
+    * Add CircleWithParams function
+    * Add DilateWithParams() function (#827)
+    * Add EllipseWithParams function
+    * Add FillPolyWithParams function
+    * Add PointPolygonTest function
+    * Add RectangleWithParams function
+* **photo**
+    * add MergeMertens, AlignMTB and Denoising function (#848)
+* **xphoto**
+    * Add Xphoto contrib (#844)
+
+0.27.0
+---
+* **all**
+    * update to OpenCV 4.5.2
+* **core**
+    * add Append() to PointsVector/PointVector
+    * add cv::RNG
+    * add implementation for Point2fVector
+    * add rand functions
+    * add test coverage for PointsVector
+    * create new PointsVector/PointVector wrappers to avoid repetitive memory copying for seeming innocent operations involving slices of image.Point
+    * test coverage for Point2f
+    * use PointVector for everything that we can to speed up pipeline when passing around Point vectors
+    * use enum instead of int for Invert Method
+* **cuda**
+    * adding HoughLinesDetector and HoughSegmentDetector
+    * adding tests for the CannyEdgeDetector
+    * some refactoring of the API
+    * adding dockerfiles for OpenCV 4.5.2 with CUDA 11.2
+    * add GaussianFilter
+    * correct signature and test for Threshold
+    * implement SobelFilter
+    * move arithm module functions into correct location
+    * rename files to get rid of so many cudas
+    * add abs function implementation
+* **dnn**
+    * increase test coverage
+* **docker**
+    * make all Dockerfiles names/tags more consistent
+* **docs**
+    * add CUDA functions that need implementation to ROADMAP
+    * remove invalid sections and add some missing functions from ROADMAP
+* **imgproc**
+    * Add FindContoursWithParams function
+    * Add ToImageYUV and ToImageYUVWithParams
+* **make**
+    * add make task to show changelog for next release
+* **wechat_qrcode**
+    * disable module in Windows due to linker error
+
 0.26.0
 ---
 * **all**

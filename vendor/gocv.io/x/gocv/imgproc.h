@@ -16,20 +16,21 @@ typedef void* CLAHE;
 
 #include "core.h"
 
-double ArcLength(Contour curve, bool is_closed);
-Contour ApproxPolyDP(Contour curve, double epsilon, bool closed);
+double ArcLength(PointVector curve, bool is_closed);
+PointVector ApproxPolyDP(PointVector curve, double epsilon, bool closed);
 void CvtColor(Mat src, Mat dst, int code);
 void EqualizeHist(Mat src, Mat dst);
 void CalcHist(struct Mats mats, IntVector chans, Mat mask, Mat hist, IntVector sz, FloatVector rng, bool acc);
 void CalcBackProject(struct Mats mats, IntVector chans, Mat hist, Mat backProject, FloatVector rng, bool uniform);
 double CompareHist(Mat hist1, Mat hist2, int method);
-void ConvexHull(Contour points, Mat hull, bool clockwise, bool returnPoints);
-void ConvexityDefects(Contour points, Mat hull, Mat result);
+void ConvexHull(PointVector points, Mat hull, bool clockwise, bool returnPoints);
+void ConvexityDefects(PointVector points, Mat hull, Mat result);
 void BilateralFilter(Mat src, Mat dst, int d, double sc, double ss);
 void Blur(Mat src, Mat dst, Size ps);
 void BoxFilter(Mat src, Mat dst, int ddepth, Size ps);
 void SqBoxFilter(Mat src, Mat dst, int ddepth, Size ps);
 void Dilate(Mat src, Mat dst, Mat kernel);
+void DilateWithParams(Mat src, Mat dst, Mat kernel, Point anchor, int iterations, int borderType, Scalar borderValue);
 void DistanceTransform(Mat src, Mat dst, Mat labels, int distanceType, int maskSize, int labelType);
 void Erode(Mat src, Mat dst, Mat kernel);
 void ErodeWithParams(Mat src, Mat dst, Mat kernel, Point anchor, int iterations, int borderType);
@@ -37,13 +38,14 @@ void MatchTemplate(Mat image, Mat templ, Mat result, int method, Mat mask);
 struct Moment Moments(Mat src, bool binaryImage);
 void PyrDown(Mat src, Mat dst, Size dstsize, int borderType);
 void PyrUp(Mat src, Mat dst, Size dstsize, int borderType);
-struct Rect BoundingRect(Contour con);
+struct Rect BoundingRect(PointVector pts);
 void BoxPoints(RotatedRect rect, Mat boxPts);
-double ContourArea(Contour con);
-struct RotatedRect MinAreaRect(Points points);
-struct RotatedRect FitEllipse(Points points);
-void MinEnclosingCircle(Points points, Point2f* center, float* radius);
-struct Contours FindContours(Mat src, int mode, int method);
+double ContourArea(PointVector pts);
+struct RotatedRect MinAreaRect(PointVector pts);
+struct RotatedRect FitEllipse(PointVector pts);
+void MinEnclosingCircle(PointVector pts, Point2f* center, float* radius);
+PointsVector FindContours(Mat src, Mat hierarchy, int mode, int method);
+double PointPolygonTest(PointVector pts, Point pt, bool measureDist);
 int ConnectedComponents(Mat src, Mat dst, int connectivity, int ltype, int ccltype);
 int ConnectedComponentsWithStats(Mat src, Mat labels, Mat stats, Mat centroids, int connectivity, int ltype, int ccltype);
 
@@ -78,12 +80,17 @@ void AdaptiveThreshold(Mat src, Mat dst, double maxValue, int adaptiveTyp, int t
 
 void ArrowedLine(Mat img, Point pt1, Point pt2, Scalar color, int thickness);
 void Circle(Mat img, Point center, int radius, Scalar color, int thickness);
+void CircleWithParams(Mat img, Point center, int radius, Scalar color, int thickness, int lineType, int shift);
 void Ellipse(Mat img, Point center, Point axes, double angle, double
              startAngle, double endAngle, Scalar color, int thickness);
+void EllipseWithParams(Mat img, Point center, Point axes, double angle, double
+             startAngle, double endAngle, Scalar color, int thickness, int lineType, int shift);
 void Line(Mat img, Point pt1, Point pt2, Scalar color, int thickness);
 void Rectangle(Mat img, Rect rect, Scalar color, int thickness);
-void FillPoly(Mat img, Contours points, Scalar color);
-void Polylines(Mat img, Contours points, bool isClosed, Scalar color, int thickness);
+void RectangleWithParams(Mat img, Rect rect, Scalar color, int thickness, int lineType, int shift);
+void FillPoly(Mat img, PointsVector points, Scalar color);
+void FillPolyWithParams(Mat img, PointsVector points, Scalar color, int lineType, int shift, Point offset);
+void Polylines(Mat img, PointsVector points, bool isClosed, Scalar color, int thickness);
 struct Size GetTextSize(const char* text, int fontFace, double fontScale, int thickness);
 struct Size GetTextSizeWithBaseline(const char* text, int fontFace, double fontScale, int thickness, int* baseline);
 void PutText(Mat img, const char* text, Point org, int fontFace, double fontScale,
@@ -100,19 +107,19 @@ void WarpPerspective(Mat src, Mat dst, Mat m, Size dsize);
 void Watershed(Mat image, Mat markers);
 void ApplyColorMap(Mat src, Mat dst, int colormap);
 void ApplyCustomColorMap(Mat src, Mat dst, Mat colormap);
-Mat GetPerspectiveTransform(Contour src, Contour dst);
-Mat GetPerspectiveTransform2f(Contour2f src, Contour2f dst);
-Mat GetAffineTransform(Contour src, Contour dst);
-Mat GetAffineTransform2f(Contour2f src, Contour2f dst);
+Mat GetPerspectiveTransform(PointVector src, PointVector dst);
+Mat GetPerspectiveTransform2f(Point2fVector src, Point2fVector dst);
+Mat GetAffineTransform(PointVector src, PointVector dst);
+Mat GetAffineTransform2f(Point2fVector src, Point2fVector dst);
 Mat FindHomography(Mat src, Mat dst, int method, double ransacReprojThreshold, Mat mask, const int maxIters, const double confidence) ;
-void DrawContours(Mat src, Contours contours, int contourIdx, Scalar color, int thickness);
+void DrawContours(Mat src, PointsVector contours, int contourIdx, Scalar color, int thickness);
 void Sobel(Mat src, Mat dst, int ddepth, int dx, int dy, int ksize, double scale, double delta, int borderType);
 void SpatialGradient(Mat src, Mat dx, Mat dy, int ksize, int borderType);
 void Remap(Mat src, Mat dst, Mat map1, Mat map2, int interpolation, int borderMode, Scalar borderValue);
 void Filter2D(Mat src, Mat dst, int ddepth, Mat kernel, Point anchor, double delta, int borderType);
 void SepFilter2D(Mat src, Mat dst, int ddepth, Mat kernelX, Mat kernelY, Point anchor, double delta, int borderType);
 void LogPolar(Mat src, Mat dst, Point center, double m, int flags);
-void FitLine(Contour points, Mat line, int distType, double param, double reps, double aeps);
+void FitLine(PointVector pts, Mat line, int distType, double param, double reps, double aeps);
 void LinearPolar(Mat src, Mat dst, Point center, double maxRadius, int flags);
 bool ClipLine(Size imgSize, Point pt1, Point pt2);
 CLAHE CLAHE_Create();

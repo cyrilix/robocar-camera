@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/cyrilix/robocar-protobuf/go/events"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
 	"gocv.io/x/gocv"
+	"google.golang.org/protobuf/proto"
 	"image"
 	"io"
 	"sync"
@@ -20,14 +20,14 @@ type VideoSource interface {
 }
 
 type OpencvCameraPart struct {
-	client mqtt.Client
-	vc     VideoSource
-	topic  string
-	topicRoi string
+	client           mqtt.Client
+	vc               VideoSource
+	topic            string
+	topicRoi         string
 	publishFrequency int
 	muImgBuffered    sync.Mutex
 	imgBuffered      *gocv.Mat
-	horizon			 int
+	horizon          int
 	cancel           chan interface{}
 }
 
@@ -48,7 +48,7 @@ func New(client mqtt.Client, topic string, topicRoi string, publishFrequency int
 		client:           client,
 		vc:               vc,
 		topic:            topic,
-		topicRoi: 		  topicRoi,
+		topicRoi:         topicRoi,
 		publishFrequency: publishFrequency,
 		imgBuffered:      &img,
 	}
@@ -109,6 +109,7 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time, topic string, fram
 		zap.S().With("topic", topic).Errorf("unable to convert image to jpeg: %v", err)
 		return
 	}
+	defer img.Close()
 
 	msg := &events.FrameMessage{
 		Id: &events.FrameRef{
@@ -119,7 +120,7 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time, topic string, fram
 				Nanos:   int32(tickerTime.Nanosecond()),
 			},
 		},
-		Frame: img,
+		Frame: img.GetBytes(),
 	}
 
 	payload, err := proto.Marshal(msg)
@@ -129,7 +130,6 @@ func (o *OpencvCameraPart) publishFrame(tickerTime time.Time, topic string, fram
 
 	publish(o.client, topic, &payload)
 }
-
 
 var publish = func(client mqtt.Client, topic string, payload *[]byte) {
 	token := client.Publish(topic, 0, false, *payload)
