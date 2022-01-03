@@ -17,7 +17,6 @@ func main() {
 	var mqttBroker, username, password, clientId, topicBase, topicRoi string
 	var pubFrequency, horizon int
 	var device, videoWidth, videoHeight int
-	var debug bool
 
 	mqttQos := cli.InitIntFlag("MQTT_QOS", 0)
 	_, mqttRetain := os.LookupEnv("MQTT_RETAIN")
@@ -37,20 +36,16 @@ func main() {
 
 	flag.IntVar(&horizon, "horizon", horizon, "Limit region of interest to horizon in pixels from top, use HORIZON if args not set")
 
-	flag.BoolVar(&debug, "debug", false, "Display raw value to debug")
-
+	logLevel := zap.LevelFlag("log", zap.InfoLevel, "log level")
 	flag.Parse()
+
 	if len(os.Args) <= 1 {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
 	config := zap.NewDevelopmentConfig()
-	if debug {
-		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-	} else {
-		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-	}
+	config.Level = zap.NewAtomicLevelAt(*logLevel)
 	lgr, err := config.Build()
 	if err != nil {
 		log.Fatalf("unable to init logger: %v", err)
@@ -73,7 +68,7 @@ func main() {
 	videoProperties[gocv.VideoCaptureFrameHeight] = float64(videoHeight)
 
 	if topicRoi == "" {
-		topicRoi = fmt.Sprintf( "%s-roi", topicBase)
+		topicRoi = fmt.Sprintf("%s-roi", topicBase)
 	}
 	c := camera.New(client, topicBase, topicRoi, pubFrequency, videoProperties, horizon)
 	defer c.Stop()
