@@ -1,6 +1,6 @@
 ARG OPENCV_VERSION=v4.5.3
 
-FROM docker.io/golang:1.17-alpine as gobuilder
+FROM docker.io/golang:1.18-alpine as gobuilder
 
 
 FROM docker.io/cyrilix/opencv-buildstage:${OPENCV_VERSION} as builder
